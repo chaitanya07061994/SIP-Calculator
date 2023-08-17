@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SIP Calculator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-image: url(https://images.pexels.com/photos/2166711/pexels-photo-2166711.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1); /* Add your image URL here */
+            background-size: cover;
+            background-repeat: no-repeat;
+            margin: 0;
+            padding: 0;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .calculator-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+            border: 2px solid #007bff;
+            padding: 20px;
+            width: 400px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-family: 'Segoe UI', sans-serif;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        #result {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #444;
+        }
+        
+        #result strong {
+            font-weight: bold;
+        }
+        
+        #chart {
+            width: 100%;
+            height: 300px;
+            margin-top: 30px;
+        }
+        
+        .description {
+           -webkit-border-radius: 20px;
+           -moz-border-radius: 20px;
+           border-radius: 20px;
+           -webkit-box-shadow: 1px 1px 16px #000000;
+           -moz-box-shadow: 1px 1px 16px #000000;
+           box-shadow: 1px 1px 16px #000000;
+           background-image: -moz-linear-gradient(top, #87CEFA, #FFFF66);
+           background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0.00, #87CEFA), color-stop(1.0, #FFFF66));
+           background-color: #E0FFFF;
+           padding: 10px;
+           font-family: Verdana, Geneva, sans-serif;
+           font-size: 13pt;
+           color: #000000;
+           text-align: center;
+           border-radius: 8px;
+           box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <!-- Google Charts library -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <div class="description">
+            <p>Welcome to the SIP Calculator!</p>
+            <p>Calculate your Systematic Investment Plan (SIP) investments and visualize potential returns with our easy-to-use calculator. Simply enter your monthly investment amount, expected return rate, and time period, and let the calculator do the rest. See the projected invested amount, estimated returns, and the total value of your SIP over the specified period.</p>
+        </div>
+        
+        <div class="calculator-container">
+            <h1>SIP Calculator</h1>
+            <label for="monthly-investment">Monthly Investment (₹):</label>
+            <input type="number" id="monthly-investment">
+            
+            <label for="expected-return-rate">Expected Return Rate (% per annum):</label>
+            <input type="number" id="expected-return-rate">
+            
+            <label for="time-period">Time Period (years):</label>
+            <input type="number" id="time-period">
+            
+            <button onclick="calculateSIP()">Calculate</button>
+            
+            <div id="result"></div>
+            
+            <div id="chart"></div>
+        </div>
+    </div>
+    
+    <script>
+        google.charts.load('current', {packages: ['corechart']});
+        
+        function calculateSIP() {
+            const monthlyInvestment = parseFloat(document.getElementById("monthly-investment").value);
+            const expectedReturnRate = parseFloat(document.getElementById("expected-return-rate").value) / 100;
+            const timePeriod = parseFloat(document.getElementById("time-period").value);
+            
+            const numMonths = timePeriod * 12;
+            
+            const { investedAmount, estimatedReturns, totalValue } = calculateFutureValue(monthlyInvestment, expectedReturnRate, numMonths);
+            
+            const resultElement = document.getElementById("result");
+            resultElement.innerHTML = `Invested amount: ₹${formatIndianRupees(investedAmount)}<br>Estimated returns: ₹${formatIndianRupees(estimatedReturns)}<br><strong>Total value: ₹${formatIndianRupees(totalValue)}</strong>`;
+            
+            drawChart(investedAmount, estimatedReturns);
+        }
+        
+        function calculateFutureValue(monthlyInvestment, expectedReturnRate, numMonths) {
+            const monthlyRate = 1 + expectedReturnRate / 12;
+            const futureValue = monthlyInvestment * ((Math.pow(monthlyRate, numMonths) - 1) / (expectedReturnRate / 12)) * monthlyRate;
+            
+            const investedAmount = monthlyInvestment * numMonths;
+            const estimatedReturns = futureValue - investedAmount;
+            
+            return {
+                investedAmount: investedAmount,
+                estimatedReturns: estimatedReturns,
+                totalValue: futureValue
+            };
+        }
+        
+        function formatIndianRupees(amount) {
+            return amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }).replace("₹", "");
+        }
+        
+        function drawChart(investedAmount, estimatedReturns) {
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Type');
+            data.addColumn('number', 'Amount');
+            data.addRows([
+                ['Invested Amount', investedAmount],
+                ['Estimated Returns', estimatedReturns]
+            ]);
+
+            var options = {
+                title: 'Invested Amount vs Estimated Returns',
+                pieHole: 0.4,
+                chartArea: { left: 0, top: 20, width: '100%', height: '80%' },
+                legend: { position: 'bottom', textStyle: { fontSize: 12 } },
+                colors: ['#007bff', '#28a745']
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('chart'));
+            chart.draw(data, options);
+        }
+    </script>
+</body>
+</html>
